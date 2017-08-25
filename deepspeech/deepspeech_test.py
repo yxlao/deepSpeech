@@ -2,7 +2,6 @@
 # Email: lkrishn7@ford.com
 # Author: YAO Matrix
 # Email: yaoweifeng0301@126.com
-
 """Evaluation for DeepSpeech2.
 
 Usage:
@@ -31,32 +30,56 @@ IX_TO_CHAR = {i: ch for (i, ch) in enumerate(ALPHABET)}
 def parse_args():
     """ Parses command line arguments."""
     parser = argparse.ArgumentParser()
-    parser.add_argument('--eval_dir', type=str,
-                        default='../models/librispeech/eval',
-                        help='Directory to write event logs')
-    parser.add_argument('--checkpoint_dir', type=str,
-                        default='../models/librispeech/train',
-                        help='Directory where to read model checkpoints.')
-    parser.add_argument('--eval_data', type=str, default='val',
-                        help="Either 'test' or 'val' or 'train' ")
-    parser.add_argument('--batch_size', type=int, default=1,
-                        help='Number of feats to process in a batch')
-    parser.add_argument('--eval_interval_secs', type=int, default=60 * 5,
-                        help='How often to run the eval')
-    parser.add_argument('--data_dir', type=str,
-                        default='../data/LibriSpeech/processed/',
-                        help='Path to the deepSpeech data directory')
-    parser.add_argument('--run_once', type=int, default=0,
-                        help='Whether to run eval only once')
-    parser.add_argument('--engine', type=str, default='tf',
-                        help = 'Select the engine you use: tf, mkl, mkldnn_rnn, cudnn_rnn')
-    parser.add_argument('--nchw', type=int, default=1,
-                        help = 'Whether to use nchw memory layout')
+    parser.add_argument(
+        '--eval_dir',
+        type=str,
+        default='../models/librispeech/eval',
+        help='Directory to write event logs')
+    parser.add_argument(
+        '--checkpoint_dir',
+        type=str,
+        default='../models/librispeech/train',
+        help='Directory where to read model checkpoints.')
+    parser.add_argument(
+        '--eval_data',
+        type=str,
+        default='val',
+        help="Either 'test' or 'val' or 'train' ")
+    parser.add_argument(
+        '--batch_size',
+        type=int,
+        default=1,
+        help='Number of feats to process in a batch')
+    parser.add_argument(
+        '--eval_interval_secs',
+        type=int,
+        default=60 * 5,
+        help='How often to run the eval')
+    parser.add_argument(
+        '--data_dir',
+        type=str,
+        default='../data/LibriSpeech/processed/',
+        help='Path to the deepspeech data directory')
+    parser.add_argument(
+        '--run_once',
+        type=int,
+        default=0,
+        help='Whether to run eval only once')
+    parser.add_argument(
+        '--engine',
+        type=str,
+        default='tf',
+        help='Select the engine you use: tf, mkl, mkldnn_rnn, cudnn_rnn')
+    parser.add_argument(
+        '--nchw',
+        type=int,
+        default=1,
+        help='Whether to use nchw memory layout')
     args = parser.parse_args()
 
     # Read saved parameters from file
     param_file = os.path.join(args.checkpoint_dir,
-                              'deepSpeech_parameters.json')
+                              'deepspeech_parameters.json')
     with open(param_file, 'r') as file:
         params = json.load(file)
         # Read network architecture parameters from
@@ -69,12 +92,13 @@ def parse_args():
         args.moving_avg_decay = params['moving_avg_decay']
     return args
 
+
 ARGS = parse_args()
 
 if ARGS.nchw is True:
-  import deepSpeech_NCHW as deepSpeech
+    import deepspeech_nchw as deepspeech
 else:
-  import deepSpeech
+    import deepspeech
 
 
 def sparse_to_labels(sparse_matrix):
@@ -118,8 +142,7 @@ def inference(predictions_op, true_labels_op, display, sess):
     """
     char_err_rate = []
     # Perform inference of batch worth of data at a time.
-    [predictions, true_labels] = sess.run([predictions_op,
-                                           true_labels_op])
+    [predictions, true_labels] = sess.run([predictions_op, true_labels_op])
     pred_label = sparse_to_labels(predictions[0][0])
     actual_label = sparse_to_labels(true_labels)
     for (label, pred) in zip(actual_label, pred_label):
@@ -151,9 +174,9 @@ def eval_once(sess, saver, summary_writer, predictions_op, summary_op,
     try:
         threads = []
         for queue_runners in tf.get_collection(tf.GraphKeys.QUEUE_RUNNERS):
-            threads.extend(queue_runners.create_threads(sess, coord=coord,
-                                                        daemon=True,
-                                                        start=True))
+            threads.extend(
+                queue_runners.create_threads(
+                    sess, coord=coord, daemon=True, start=True))
         # Only using a subset of the training data
         if ARGS.eval_data == 'train':
             num_examples = 2048
@@ -166,12 +189,12 @@ def eval_once(sess, saver, summary_writer, predictions_op, summary_op,
         char_err_rate = []
         while step < num_iter and not coord.should_stop():
             print "step: ", step
-            char_err_rate.append(inference(predictions_op, true_labels_op,
-                                           True, sess))
+            char_err_rate.append(
+                inference(predictions_op, true_labels_op, True, sess))
             step += 1
 
         # Compute and print mean CER
-        avg_cer = np.mean(char_err_rate)*100
+        avg_cer = np.mean(char_err_rate) * 100
         print('%s: char_err_rate = %.3f %%' % (datetime.now(), avg_cer))
 
         # Add summary ops
@@ -188,31 +211,33 @@ def eval_once(sess, saver, summary_writer, predictions_op, summary_op,
 
 
 def evaluate():
-    """ Evaluate deepSpeech modelfor a number of steps."""
+    """ Evaluate deepspeech modelfor a number of steps."""
 
     with tf.Graph().as_default() as graph:
 
-        # Get feats and labels for deepSpeech.
-        feats, labels, seq_lens = deepSpeech.inputs(ARGS.eval_data,
-                                                    data_dir=ARGS.data_dir,
-                                                    batch_size=ARGS.batch_size,
-                                                    use_fp16=ARGS.use_fp16,
-                                                    shuffle=True)
+        # Get feats and labels for deepspeech.
+        feats, labels, seq_lens = deepspeech.inputs(
+            ARGS.eval_data,
+            data_dir=ARGS.data_dir,
+            batch_size=ARGS.batch_size,
+            use_fp16=ARGS.use_fp16,
+            shuffle=True)
         session = tf.Session()
 
         # Build ops that computes the logits predictions from the
         # inference model.
         ARGS.keep_prob = 1.0  # Disable dropout during testing.
-        logits = deepSpeech.inference(session, feats, seq_lens, ARGS)
+        logits = deepspeech.inference(session, feats, seq_lens, ARGS)
 
         # Calculate predictions.
         output_log_prob = tf.nn.log_softmax(logits)
         decoder = tf.nn.ctc_greedy_decoder
-        strided_seq_lens = deepSpeech.get_rnn_seqlen(seq_lens)
+        strided_seq_lens = deepspeech.get_rnn_seqlen(seq_lens)
         predictions = decoder(output_log_prob, strided_seq_lens)
 
         # Restore the moving average version of the learned variables for eval.
-        variable_averages = tf.train.ExponentialMovingAverage(ARGS.moving_avg_decay)
+        variable_averages = tf.train.ExponentialMovingAverage(
+            ARGS.moving_avg_decay)
         variables_to_restore = variable_averages.variables_to_restore()
         saver = tf.train.Saver(variables_to_restore)
 
@@ -221,7 +246,8 @@ def evaluate():
         summary_writer = tf.summary.FileWriter(ARGS.eval_dir, graph)
 
         while True:
-            eval_once(session, saver, summary_writer, predictions, summary_op, labels)
+            eval_once(session, saver, summary_writer, predictions, summary_op,
+                      labels)
 
             if ARGS.run_once:
                 break

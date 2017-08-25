@@ -37,7 +37,7 @@ if [[ ${check}x != "OK"x ]];then
     exit -1
 fi
 
-python deepSpeech_test.py --eval_data 'val' --nchw ${nchw} --engine ${engine}
+python deepspeech_test.py --eval_data 'val' --nchw ${nchw} --engine ${engine}
 
 echo "Done"
 
