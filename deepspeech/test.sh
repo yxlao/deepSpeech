@@ -36,7 +36,7 @@ if [[ ${check}x != "OK"x ]];then
     exit -1
 fi
 
-python deepSpeech_test.py --eval_data 'test' --nchw ${nchw} --engine ${engine} --run_once 1
+python deepspeech_test.py --eval_data 'test' --nchw ${nchw} --engine ${engine} --run_once 1
 echo "Done"
 
 # deactivate Intel Python

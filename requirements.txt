@@ -1,0 +1,5 @@
+python-Levenshtein
+python_speech_features
+PySoundFile
+scipy
+tqdm

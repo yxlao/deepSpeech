@@ -1,6 +1,5 @@
 # Author: Lakshmi Krishnan
 # Email : lkrishn7@ford.com
-
 """Routines for reading the audio data."""
 
 import os.path
@@ -39,15 +38,16 @@ def _generate_feats_and_label_batch(filename_queue, batch_size):
     }
     sequence_features = {
         # mfcc features are 161 dimensional
-        "feats": tf.FixedLenSequenceFeature([161, ], dtype=tf.float32) 
+        "feats": tf.FixedLenSequenceFeature([
+            161,
+        ], dtype=tf.float32)
     }
 
     # Parse the example (returns a dictionary of tensors)
     context_parsed, sequence_parsed = tf.parse_single_sequence_example(
         serialized=serialized_example,
         context_features=context_features,
-        sequence_features=sequence_features
-    )
+        sequence_features=sequence_features)
 
     # Generate a batch worth of examples after bucketing
     seq_len, (feats, labels) = tf.contrib.training.bucket_by_sequence_length(
@@ -76,9 +76,13 @@ def inputs(eval_data, data_dir, batch_size, shuffle=False):
       labels: Labels. 1D tensor of [batch_size] size.
     """
     if eval_data == 'train':
-        num_files = len(glob.glob(os.path.join(data_dir, 'train*/*.tfrecords')))
-        filenames = [os.path.join(data_dir, 'train-clean-100/train_' + str(i) + '.tfrecords')
-                     for i in range(1, num_files + 1)]
+        num_files = len(
+            glob.glob(os.path.join(data_dir, 'train*/*.tfrecords')))
+        filenames = [
+            os.path.join(data_dir,
+                         'train-clean-100/train_' + str(i) + '.tfrecords')
+            for i in range(1, num_files + 1)
+        ]
         # print filenames
     elif eval_data == 'val':
         filenames = glob.glob(os.path.join(data_dir, 'dev*/*.tfrecords'))
