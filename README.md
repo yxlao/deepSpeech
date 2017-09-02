@@ -50,7 +50,7 @@ Preprocessing the data
 
 Inside the github repo that you have cloned run:
 ```shell
-$ mkdir -p data/librispeech
+$ mkdir -p data/LibriSpeech
 $ cd data/librispeech
 $ wget http://www.openslr.org/resources/12/train-clean-100.tar.gz
 $ wget http://www.openslr.org/resources/12/dev-clean.tar.gz
