@@ -18,10 +18,10 @@ unset TF_CPP_MIN_VLOG_LEVEL
 echo "-----------------------------------"
 echo "Start training"
 
-dummy=False  # True or False
-nchw=True    # True or False
+dummy=True  # True or False
+nchw=False    # True or False
 debug=False  # True or False
-engine="mkl" # tf, mkl, cudnn_rnn, mkldnn_rnn
+engine="tf" # tf, mkl, cudnn_rnn, mkldnn_rnn
 
 # echo $dummy
 
