@@ -33,6 +33,7 @@ import helper_routines
 import deepSpeech_dummy
 from setenvs import setenvs
 from setenvs import arglist
+jit_scope = tf.contrib.compiler.jit.experimental_jit_scope
 
 def parse_args():
     " Parses command line arguments."
@@ -101,7 +102,7 @@ def parse_args():
                         help='Whether to use nchw memory layout')
     parser.add_argument('--dummy', type=distutils.util.strtobool, default=False,
                         help='Whether to use dummy data rather than librispeech data')
- 
+
     args = parser.parse_args()
 
     print "debug: ", args.debug
@@ -271,7 +272,7 @@ def get_loss_grads(sess, data, optimizer):
     [feats, labels, seq_lens] = data
     grads_and_vars = None
     with tf.variable_scope(tf.get_variable_scope()) as vscope:
-        with tf.device('/cpu'):
+        with jit_scope():
             with tf.name_scope("loss_grad") as scope:
                 # Calculate the loss for the deepSpeech model.
                 loss = tower_loss(sess, scope, feats, labels, seq_lens)
@@ -304,7 +305,7 @@ def run_train_loop(sess, operations, saver):
     # Evaluate the ops for max_steps
     for step in range(ARGS.max_steps):
         start_time = time.time()
-        
+
         if ARGS.dummy:
             feats, idx, vals, shape, seq_lens = deepSpeech_dummy.inputs(ARGS.batch_size)
             data_gen_time = time.time()
@@ -312,14 +313,14 @@ def run_train_loop(sess, operations, saver):
             dummy_input_duration = data_gen_time - start_time
             _, loss_value = sess.run([train_op, loss_op], options=run_options, run_metadata=run_metadata,
                                      feed_dict={feats_batch: feats,
-                                                idx_batch: idx, 
+                                                idx_batch: idx,
                                                 vals_batch: vals,
                                                 shape_batch: shape,
                                                 seq_lens_batch: seq_lens
                                                 })
         else:
             _, loss_value = sess.run([train_op, loss_op], options=run_options, run_metadata=run_metadata)
- 
+
 
         duration = time.time() - start_time
         assert not np.isnan(loss_value), 'Model diverged with loss = NaN'
@@ -422,7 +423,7 @@ def train():
       This function build a set of ops required to build the model and optimize
       weights.
     """
-    with g.as_default(), tf.device('/cpu'):
+    with g.as_default(), jit_scope():
         # Learning rate set up
         learning_rate, global_step = set_learning_rate()
 
@@ -430,9 +431,9 @@ def train():
         optimizer = tf.train.AdamOptimizer(learning_rate)
 
         # Fetch a batch worth of data for each tower
-        if not ARGS.dummy: 
+        if not ARGS.dummy:
             data = fetch_data()
-        else: 
+        else:
             # idx, vals, s_shape = deepSpeech_dummy.dense_to_sparse(labels_batch, labels_batch_w, labels_batch_h)
             labels_batch = tf.SparseTensor(indices=idx_batch, values=tf.cast(vals_batch, tf.int32), dense_shape=shape_batch)
             data = [feats_batch, labels_batch, seq_lens_batch]
@@ -514,7 +515,7 @@ def main():
 
     args = setenvs(sys.argv)
     print('Running on platform: ', args.platform)
-  
+
     if args.platform == 'bdw':
         ARGS.intra_op = 8
         ARGS.inter_op = 5
@@ -524,7 +525,7 @@ def main():
 
     print('Running inter_op: ', ARGS.inter_op)
     print('Running intra_op: ', ARGS.intra_op)
- 
+
     train()
 
 if __name__ == '__main__':
